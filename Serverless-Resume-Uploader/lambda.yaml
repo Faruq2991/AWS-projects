@@ -1,0 +1,34 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Lambda function for processing uploads
+
+Parameters:
+  BucketName:
+    Type: String
+  TableName:
+    Type: String
+
+Resources:
+  FileMetadataFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/
+      Handler: lambda_function.lambda_handler
+      Runtime: python3.12
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TableName
+        - Statement:
+            - Effect: Allow
+              Action:
+                - s3:GetObject
+              Resource: !Sub "arn:aws:s3:::${BucketName}/*"
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref TableName
+          BUCKET_NAME: !Ref BucketName
+
+Outputs:
+  FunctionArn:
+    Description: "ARN of the processing Lambda function"
+    Value: !GetAtt FileMetadataFunction.Arn
