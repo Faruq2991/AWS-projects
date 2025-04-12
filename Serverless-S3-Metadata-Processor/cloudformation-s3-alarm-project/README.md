@@ -22,7 +22,7 @@ cloudformation-s3-alarm-project
 1. **Clone the Repository**  
    Clone this repository to your local machine using:
    ```
-   git clone git@github.com:Faruq2991/AWS-projects/Serverless-S3-Metadata-Processor.git
+   git clone git@github.com:Faruq2991/AWS-projects.git
    ```
 
 2. **Set Up Environment**  
