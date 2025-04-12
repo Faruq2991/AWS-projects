@@ -28,6 +28,15 @@ project/
 
 ---
 
+## Code Structure
+
+- **`process_s3_event`**: Handles the business logic of processing S3 event records and storing metadata in DynamoDB.
+- **`lambda_handler`**: Orchestrates the processing of S3 events and delegates the logic to `process_s3_event`.
+
+This separation improves modularity and testability.
+
+---
+
 ## 🚀 Deployment Steps
 1. Clone the repo
 2. Install AWS CLI and configure credentials
