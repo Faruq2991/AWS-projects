@@ -1,0 +1,64 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: SAM template for S3 file upload and CloudWatch alarm.
+
+Resources:
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "${AWS::StackName}-bucket"
+      NotificationConfiguration:
+        LambdaConfigurations:
+          - Event: "s3:ObjectCreated:*"
+            Function: !GetAtt ProcessFileFunction.Arn
+
+  ProcessFileFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: lambda_function.lambda_handler
+      Runtime: python3.9
+      CodeUri: lambda/
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Ref S3Bucket
+        - DynamoDBCrudPolicy:
+            TableName: !Ref MetadataTable
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref MetadataTable
+
+  MetadataTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "${AWS::StackName}-MetadataTable"
+      AttributeDefinitions:
+        - AttributeName: FileName
+          AttributeType: S
+      KeySchema:
+        - AttributeName: FileName
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+
+  S3ObjectCountAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub "${AWS::StackName}-S3ObjectCountAlarm"
+      MetricName: NumberOfObjects
+      Namespace: AWS/S3
+      Statistic: Average
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 100
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+        - Name: BucketName
+          Value: !Ref S3Bucket
+        - Name: StorageType
+          Value: AllStorageTypes
+      AlarmActions:
+        - !Ref AlarmSNS
+
+  AlarmSNS:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub "${AWS::StackName}-AlarmTopic"

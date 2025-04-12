@@ -1,0 +1,63 @@
+Resources:
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "${AWS::StackName}-bucket"
+      VersioningConfiguration:
+        Status: Enabled
+      LifecycleConfiguration:
+        Rules:
+          - Id: "ExpireOldFiles"
+            Status: Enabled
+            ExpirationInDays: 30
+
+  FileCountMetricFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      LogGroupName: !Ref S3BucketLogGroup
+      FilterPattern: "{ $.eventName = PutObject }"
+      MetricTransformations:
+        - MetricValue: "1"
+          MetricNamespace: "S3FileCount"
+          MetricName: "FileCount"
+
+  FileCountAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: "Alarm when file count exceeds threshold"
+      MetricName: "FileCount"
+      Namespace: "S3FileCount"
+      Statistic: "Sum"
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 100
+      ComparisonOperator: "GreaterThanThreshold"
+      AlarmActions:
+        - !Ref AlarmNotificationTopic
+      OKActions:
+        - !Ref AlarmNotificationTopic
+
+  AlarmNotificationTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      Subscription:
+        - Protocol: email
+          Endpoint: "your-email@example.com"  # Replace with your email address
+
+  S3BucketLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "${AWS::StackName}-s3-logs"
+      RetentionInDays: 14
+
+  AlarmSNS:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub "${AWS::StackName}-AlarmTopic"
+
+  AlarmSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref AlarmSNS
+      Protocol: email
+      Endpoint: "your-email@example.com"

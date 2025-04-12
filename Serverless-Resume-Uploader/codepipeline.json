@@ -1,0 +1,67 @@
+{
+  "pipeline": {
+    "name": "ServerlessResumeUploader-Pipeline",
+    "roleArn": "arn:aws:iam::920373008884:role/AWSCodePipelineServiceRole",
+    "artifactStore": {
+      "type": "S3",
+      "location": "serverlessresumeuploader-codepipeline-artifacts"
+    },
+    "stages": [
+      {
+        "name": "Source",
+        "actions": [
+          {
+            "name": "Source",
+            "actionTypeId": {
+              "category": "Source",
+              "owner": "ThirdParty",
+              "provider": "GitHub",
+              "version": "1"
+            },
+            "runOrder": 1,
+            "configuration": {
+              "Owner": "your-github-username",
+              "Repo": "Serverless-Resume-Uploader",
+              "Branch": "main",
+              "OAuthToken": "{{your-github-oauth-token}}"
+            },
+            "outputArtifacts": [
+              {
+                "name": "SourceArtifact"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Build",
+        "actions": [
+          {
+            "name": "Build",
+            "actionTypeId": {
+              "category": "Build",
+              "owner": "AWS",
+              "provider": "CodeBuild",
+              "version": "1"
+            },
+            "runOrder": 1,
+            "configuration": {
+              "ProjectName": "ServerlessResumeUploader-Build"
+            },
+            "inputArtifacts": [
+              {
+                "name": "SourceArtifact"
+              }
+            ],
+            "outputArtifacts": [
+              {
+                "name": "BuildArtifact"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "version": 1
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "ConfigRuleName": "s3-bucket-encryption-check",
+  "Description": "Checks if S3 buckets have encryption enabled",
+  "Scope": {
+    "ComplianceResourceTypes": ["AWS::S3::Bucket"]
+  },
+  "Source": {
+    "Owner": "AWS",
+    "SourceIdentifier": "S3_BUCKET_SERVER_SIDE_ENCRYPTION_ENABLED"
+  },
+  "InputParameters": "{}",
+  "MaximumExecutionFrequency": "TwentyFour_Hours"
+}

@@ -1,0 +1,25 @@
+version: 0.2
+phases:
+  install:
+    runtime-versions:
+      python: 3.12
+    commands:
+      - pip install -r requirements.txt
+      - gem install cfn-nag
+      - npm install -g aws-cdk
+
+  pre_build:
+    commands:
+      - python -m pytest tests/
+      - cfn_nag_scan --input-path template.yaml
+      - cfn_nag_scan --input-path infrastructure.yaml
+
+  build:
+    commands:
+      - sam build
+      - aws cloudformation deploy --template-file infrastructure.yaml --stack-name ServerlessResumeUploader-Infra --capabilities CAPABILITY_IAM
+      - sam deploy --template-file lambda.yaml --stack-name ServerlessResumeUploader-Lambda --capabilities CAPABILITY_IAM
+
+  post_build:
+    commands:
+      - aws configservice put-config-rule --config-rule file://security-rules/config-rule.json

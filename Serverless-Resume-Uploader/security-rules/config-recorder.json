@@ -1,0 +1,13 @@
+{
+  "name": "default",
+  "roleARN": "arn:aws:iam::920373008884:role/aws-service-role/config.amazonaws.com/AWSServiceRoleForConfig",
+  "recordingGroup": {
+    "allSupported": true,
+    "includeGlobalResourceTypes": true,
+    "resourceTypes": [
+      "AWS::S3::Bucket",
+      "AWS::Lambda::Function",
+      "AWS::DynamoDB::Table"
+    ]
+  }
+}

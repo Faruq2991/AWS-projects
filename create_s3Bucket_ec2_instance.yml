@@ -1,0 +1,73 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "CloudFormation template provisioning EC2 instance and S3 bucket with best practices"
+
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues: [dev, staging, prod]
+    Description: Deployment environment
+  BucketName:
+    Type: String
+    Description: Name for the S3 bucket (will be appended with account ID)
+    Default: my-bucket
+  InstanceType:
+    Type: String
+    Default: t2.micro
+    AllowedValues: [t2.micro, t2.small, t2.medium]
+    Description: EC2 instance type
+
+Resources:
+  myVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      cidrBlock: 0.0.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+         - Key: "Name"
+           Value: !Sub "my-vpc-${Environment}"
+           
+  EC2SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable SSH access
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+
+  EC2Instance:
+    Type: "AWS::EC2::Instance"
+    Properties:
+      ImageId: "ami-087f352c165340ea1"
+      InstanceType: !Ref InstanceType
+      SecurityGroups:
+        - !Ref EC2SecurityGroup
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-ec2
+        - Key: Environment
+          Value: !Ref Environment
+
+  S3Bucket:
+    Type: "AWS::S3::Bucket"
+    Properties:
+      BucketName: !Sub ${BucketName}-${AWS::AccountId}
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-bucket
+        - Key: Environment
+          Value: !Ref Environment
+
+Outputs:
+  EC2InstanceId:
+    Description: EC2 Instance ID
+    Value: !Ref EC2Instance
+  S3BucketName:
+    Description: S3 Bucket Name
+    Value: !Ref S3Bucket
+  SecurityGroupId:
+    Description: EC2 Security Group ID
+    Value: !Ref EC2SecurityGroup
